@@ -1,14 +1,31 @@
 
+import os
+
 async def upload_file(client, path, channel):
 
-    if path.endswith(".mp4") or path.endswith(".mkv"):
+    file_name = os.path.basename(path).lower()
 
-        await client.send_video(channel, path)
+    # VIDEO FILES
+    if file_name.endswith((".mp4", ".mkv", ".mov", ".webm")):
 
-    elif path.endswith(".jpg") or path.endswith(".png"):
+        await client.send_video(
+            chat_id=channel,
+            video=path,
+            supports_streaming=True
+        )
 
-        await client.send_photo(channel, path)
+    # IMAGE FILES
+    elif file_name.endswith((".jpg", ".jpeg", ".png")):
 
+        await client.send_photo(
+            chat_id=channel,
+            photo=path
+        )
+
+    # OTHER FILES
     else:
 
-        await client.send_document(channel, path)
+        await client.send_document(
+            chat_id=channel,
+            document=path
+        )
