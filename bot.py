@@ -59,7 +59,7 @@ async def mega(client, message):
     await message.reply_text("📎 Send MEGA link")
 
 
-@app.on_message(filters.text)
+@app.on_message(filters.text & ~filters.regex("^YES$"))
 async def handle_text(client, message):
 
     if "mega.nz" in message.text:
