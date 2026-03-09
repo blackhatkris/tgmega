@@ -1,4 +1,4 @@
 pyrogram
 tgcrypto
 mega.py==1.0.8
-tenacity==8.2.2
+tenacity==5.1.5
