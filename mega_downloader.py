@@ -7,7 +7,21 @@ DOWNLOAD_DIR = "downloads"
 MAX_SIZE_MB = 200
 
 
+def ensure_megatools():
+
+    try:
+        subprocess.run(["megatools"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+    except FileNotFoundError:
+
+        print("Installing megatools...")
+
+        os.system("apt update && apt install -y megatools")
+
+
 async def start_mega_task(client, link, channel, progress_msg):
+
+    ensure_megatools()
 
     os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
@@ -32,7 +46,7 @@ async def start_mega_task(client, link, channel, progress_msg):
 
             path = os.path.join(root, file)
 
-            size_mb = os.path.getsize(path) / (1024*1024)
+            size_mb = os.path.getsize(path) / (1024 * 1024)
 
             if size_mb > MAX_SIZE_MB:
                 continue
@@ -40,7 +54,6 @@ async def start_mega_task(client, link, channel, progress_msg):
             files_to_upload.append(path)
 
     total = len(files_to_upload)
-
     done = 0
 
     for file in files_to_upload:
