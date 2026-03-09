@@ -3,7 +3,7 @@ import os
 from pyrogram import Client, filters
 from mega_downloader import start_mega_task
 
-print("🚀 Bot container starting...")
+print("🚀 Bot starting...")
 
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 API_ID = int(os.environ.get("API_ID"))
@@ -23,9 +23,9 @@ pending_link = {}
 @app.on_message(filters.command("start"))
 async def start(client, message):
     await message.reply_text(
-        "👋 Hello!\n\n"
-        "1️⃣ Use /setchannel <channel_id>\n"
-        "2️⃣ Use /mega to send MEGA link"
+        "👋 Welcome\n\n"
+        "1️⃣ /setchannel -100xxxx\n"
+        "2️⃣ /mega"
     )
 
 
@@ -39,44 +39,38 @@ async def setchannel(client, message):
     channel_id = int(message.command[1])
 
     try:
-        member = await client.get_chat_member(channel_id, "me")
+        await client.get_chat(channel_id)
     except:
         await message.reply_text("❌ Bot is not in that channel.")
         return
 
-    if member.status not in ["administrator", "creator"]:
-        await message.reply_text("❌ Bot must be admin in that channel.")
-        return
-
     user_channel[message.from_user.id] = channel_id
 
-    await message.reply_text("✅ Channel saved.\nNow send /mega")
+    await message.reply_text("✅ Channel saved. Now send /mega")
 
 
 @app.on_message(filters.command("mega"))
 async def mega(client, message):
 
     if message.from_user.id not in user_channel:
-        await message.reply_text("⚠️ Set channel first using /setchannel")
+        await message.reply_text("⚠️ Set channel first")
         return
 
-    await message.reply_text("📎 Send your MEGA link")
+    await message.reply_text("📎 Send MEGA link")
 
 
-@app.on_message(filters.text & ~filters.command(["start", "setchannel", "mega"]))
-async def receive_link(client, message):
+@app.on_message(filters.text)
+async def handle_text(client, message):
 
     if "mega.nz" in message.text:
 
         pending_link[message.from_user.id] = message.text
 
-        await message.reply_text(
-            "⚠️ Start uploading?\n\nReply **YES** to confirm."
-        )
+        await message.reply_text("⚠️ Reply YES to start upload")
 
 
 @app.on_message(filters.regex("^YES$"))
-async def start_process(client, message):
+async def confirm(client, message):
 
     user = message.from_user.id
 
@@ -86,11 +80,11 @@ async def start_process(client, message):
     link = pending_link[user]
     channel = user_channel[user]
 
-    await message.reply_text("⏳ Starting MEGA task...")
+    await message.reply_text("⏳ Starting task...")
 
     await start_mega_task(client, link, channel)
 
 
-print("✅ Bot is running...")
+print("✅ Bot running")
 
 app.run()
