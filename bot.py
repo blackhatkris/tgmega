@@ -1,4 +1,4 @@
-```python
+
 import os
 from pyrogram import Client, filters
 from mega_downloader import start_mega_task
