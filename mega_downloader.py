@@ -3,6 +3,9 @@ import os
 import subprocess
 from uploader import upload_file
 
+# ensure megatools installed
+os.system("apt update && apt install -y megatools")
+
 DOWNLOAD_DIR = "downloads"
 
 async def start_mega_task(client, link, channel):
