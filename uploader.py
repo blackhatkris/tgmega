@@ -1,12 +1,11 @@
 
-async def upload_file(client, filepath, channel):
+async def upload_file(client, path, channel):
 
-    if filepath.endswith(".mp4"):
-        await client.send_video(channel, filepath)
+    if path.endswith(".mp4"):
+        await client.send_video(channel, path)
 
-    elif filepath.endswith(".jpg") or filepath.endswith(".png"):
-        await client.send_photo(channel, filepath)
+    elif path.endswith(".jpg") or path.endswith(".png"):
+        await client.send_photo(channel, path)
 
     else:
-        await client.send_document(channel, filepath)
-
+        await client.send_document(channel, path)
