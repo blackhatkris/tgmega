@@ -9,15 +9,13 @@ async def start_mega_task(client, link, channel):
 
     os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
-    command = [
+    subprocess.run([
         "megatools",
         "dl",
         link,
         "--path",
         DOWNLOAD_DIR
-    ]
-
-    subprocess.run(command)
+    ])
 
     for file in os.listdir(DOWNLOAD_DIR):
 
