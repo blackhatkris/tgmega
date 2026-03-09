@@ -1,26 +1,27 @@
 
 import os
-from mega import Mega
+import subprocess
 from uploader import upload_file
 
-mega = Mega()
+DOWNLOAD_DIR = "downloads"
 
 async def start_mega_task(client, link, channel):
 
-    m = mega.login()
+    os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
-    files = m.get_files()
+    command = [
+        "megatools",
+        "dl",
+        link,
+        "--path",
+        DOWNLOAD_DIR
+    ]
 
-    for f in files:
+    subprocess.run(command)
 
-        info = files[f]
+    for file in os.listdir(DOWNLOAD_DIR):
 
-        if info["t"] != 0:
-            continue
-
-        name = info["a"]["n"]
-
-        path = m.download(f)
+        path = os.path.join(DOWNLOAD_DIR, file)
 
         await upload_file(client, path, channel)
 
