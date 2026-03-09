@@ -45,7 +45,7 @@ async def mega(client, message):
 
     await message.reply("Send MEGA link.")
 
-@app.on_message(filters.text & ~filters.command)
+@app.on_message(filters.text & ~filters.command(["start","setchannel","mega"]))
 async def receive_link(client, message):
 
     if "mega.nz" in message.text:
