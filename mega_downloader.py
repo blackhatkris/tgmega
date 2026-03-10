@@ -7,67 +7,83 @@ DOWNLOAD_DIR = "downloads"
 MAX_SIZE_MB = 200
 
 
-def ensure_megatools():
-
-    try:
-        subprocess.run(["megatools"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-
-    except FileNotFoundError:
-
-        print("Installing megatools...")
-
-        os.system("apt update && apt install -y megatools")
-
-
 async def start_mega_task(client, link, channel, progress_msg):
-
-    ensure_megatools()
 
     os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
-    await progress_msg.edit_text("📥 Downloading from MEGA...")
+    await progress_msg.edit_text("📥 Listing files from MEGA...")
 
-    subprocess.run([
-        "megatools",
-        "dl",
-        link,
-        "--path",
-        DOWNLOAD_DIR
-    ])
+    # list files
+    result = subprocess.run(
+        ["megatools", "ls", link],
+        capture_output=True,
+        text=True
+    )
 
-    files_to_upload = []
+    lines = result.stdout.splitlines()
 
-    for root, dirs, files in os.walk(DOWNLOAD_DIR):
+    files = []
 
-        dirs.sort()
-        files.sort()
+    for line in lines:
 
-        for file in files:
+        if line.strip() == "":
+            continue
 
-            path = os.path.join(root, file)
+        files.append(line.strip())
+
+    files.sort()
+
+    total = len(files)
+    done = 0
+
+    for file in files:
+
+        try:
+
+            await progress_msg.edit_text(
+                f"📥 Downloading\n\n{done}/{total}\n{file}"
+            )
+
+            # download single file
+            subprocess.run([
+                "megatools",
+                "dl",
+                f"{link}/{file}",
+                "--path",
+                DOWNLOAD_DIR
+            ])
+
+            path = os.path.join(DOWNLOAD_DIR, file)
+
+            if not os.path.exists(path):
+                continue
 
             size_mb = os.path.getsize(path) / (1024 * 1024)
 
             if size_mb > MAX_SIZE_MB:
+
+                os.remove(path)
+
                 continue
 
-            files_to_upload.append(path)
+            await progress_msg.edit_text(
+                f"⬆ Uploading\n\n{done+1}/{total}\n{file}"
+            )
 
-    total = len(files_to_upload)
-    done = 0
+            await upload_file(client, path, channel)
 
-    for file in files_to_upload:
+            os.remove(path)
 
-        done += 1
+            done += 1
 
-        await progress_msg.edit_text(
-            f"⬆ Uploading\n\n"
-            f"{done}/{total}\n"
-            f"{os.path.basename(file)}"
-        )
+        except Exception as e:
 
-        await upload_file(client, file, channel)
+            await progress_msg.edit_text(
+                f"⚠️ Stopped\n\nReason:\n{str(e)}"
+            )
 
-        os.remove(file)
+            break
 
-    await progress_msg.edit_text("✅ Upload complete")
+    await progress_msg.edit_text(
+        f"✅ Finished\nUploaded {done}/{total}"
+    )
