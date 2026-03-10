@@ -5,11 +5,20 @@ from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from mega_downloader import start_mega_task
 
+print("🚀 BOT STARTING...")
+
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 API_ID = int(os.environ.get("API_ID"))
 API_HASH = os.environ.get("API_HASH")
 
-app = Client("mega-bot", bot_token=BOT_TOKEN, api_id=API_ID, api_hash=API_HASH)
+app = Client(
+    "mega-bot",
+    bot_token=BOT_TOKEN,
+    api_id=API_ID,
+    api_hash=API_HASH
+)
+
+print("✅ BOT RUNNING")
 
 user_channel = {}
 pending_link = {}
@@ -32,6 +41,7 @@ async def process_queue(client):
     while task_queue:
 
         user, link = task_queue.pop(0)
+
         channel = user_channel[user]
 
         msg = await client.send_message(user, "⏳ Starting task...")
@@ -47,12 +57,10 @@ async def process_queue(client):
         except Exception as e:
 
             keyboard = InlineKeyboardMarkup(
-                [
-                    [
-                        InlineKeyboardButton("▶ Resume", callback_data="resume"),
-                        InlineKeyboardButton("♻ Restart", callback_data="restart")
-                    ]
-                ]
+                [[
+                    InlineKeyboardButton("▶ Resume", callback_data="resume"),
+                    InlineKeyboardButton("♻ Restart", callback_data="restart")
+                ]]
             )
 
             await msg.edit_text(
@@ -70,7 +78,7 @@ async def process_queue(client):
 async def start(client, message):
 
     await message.reply_text(
-        "Mega Bot\n\n"
+        "Mega Bot Ready\n\n"
         "/setchannel -100xxxx\n"
         "/mega"
     )
@@ -78,6 +86,14 @@ async def start(client, message):
 
 @app.on_message(filters.command("setchannel"))
 async def setchannel(client, message):
+
+    if len(message.command) < 2:
+
+        await message.reply_text(
+            "Usage:\n/setchannel -100xxxxxxxx"
+        )
+
+        return
 
     channel_id = int(message.command[1])
 
@@ -94,6 +110,14 @@ async def setchannel(client, message):
 
 @app.on_message(filters.command("mega"))
 async def mega(client, message):
+
+    if message.from_user.id not in user_channel:
+
+        await message.reply_text(
+            "Please run /setchannel first"
+        )
+
+        return
 
     await message.reply_text("Send MEGA link")
 
@@ -112,6 +136,17 @@ async def link(client, message):
 async def confirm(client, message):
 
     user = message.from_user.id
+
+    if user not in user_channel:
+
+        await message.reply_text(
+            "Please run /setchannel first"
+        )
+
+        return
+
+    if user not in pending_link:
+        return
 
     link = pending_link[user]
 
@@ -133,9 +168,12 @@ async def resume_task(client, callback):
     link = saved_state["link"]
     channel = saved_state["channel"]
 
-    msg = callback.message
-
-    await start_mega_task(client, link, channel, msg)
+    await start_mega_task(
+        client,
+        link,
+        channel,
+        callback.message
+    )
 
 
 @app.on_callback_query(filters.regex("restart"))
@@ -143,7 +181,9 @@ async def restart_container(client, callback):
 
     await callback.answer("Restarting")
 
-    await callback.message.edit_text("Restarting container...")
+    await callback.message.edit_text(
+        "Restarting container..."
+    )
 
     sys.exit(0)
 
