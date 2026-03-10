@@ -1,4 +1,4 @@
-```python
+
 import os
 import sys
 from pyrogram import Client, filters
@@ -149,4 +149,3 @@ async def restart_container(client, callback):
 
 
 app.run()
-```
