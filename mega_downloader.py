@@ -1,4 +1,4 @@
-
+```python
 import os
 import subprocess
 from uploader import upload_file
@@ -11,25 +11,15 @@ async def start_mega_task(client, link, channel, progress_msg):
 
     os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
-    await progress_msg.edit_text("📥 Listing files from MEGA...")
+    await progress_msg.edit_text("📥 Listing files...")
 
-    # list files
     result = subprocess.run(
         ["megatools", "ls", link],
         capture_output=True,
         text=True
     )
 
-    lines = result.stdout.splitlines()
-
-    files = []
-
-    for line in lines:
-
-        if line.strip() == "":
-            continue
-
-        files.append(line.strip())
+    files = result.stdout.splitlines()
 
     files.sort()
 
@@ -41,17 +31,12 @@ async def start_mega_task(client, link, channel, progress_msg):
         try:
 
             await progress_msg.edit_text(
-                f"📥 Downloading\n\n{done}/{total}\n{file}"
+                f"📥 Downloading\n{done}/{total}\n{file}"
             )
 
-            # download single file
-            subprocess.run([
-                "megatools",
-                "dl",
-                f"{link}/{file}",
-                "--path",
-                DOWNLOAD_DIR
-            ])
+            subprocess.run(
+                ["megatools", "dl", f"{link}/{file}", "--path", DOWNLOAD_DIR]
+            )
 
             path = os.path.join(DOWNLOAD_DIR, file)
 
@@ -63,11 +48,10 @@ async def start_mega_task(client, link, channel, progress_msg):
             if size_mb > MAX_SIZE_MB:
 
                 os.remove(path)
-
                 continue
 
             await progress_msg.edit_text(
-                f"⬆ Uploading\n\n{done+1}/{total}\n{file}"
+                f"⬆ Uploading\n{done+1}/{total}\n{file}"
             )
 
             await upload_file(client, path, channel)
@@ -78,12 +62,7 @@ async def start_mega_task(client, link, channel, progress_msg):
 
         except Exception as e:
 
-            await progress_msg.edit_text(
-                f"⚠️ Stopped\n\nReason:\n{str(e)}"
-            )
+            raise Exception(f"Stopped: {str(e)}")
 
-            break
-
-    await progress_msg.edit_text(
-        f"✅ Finished\nUploaded {done}/{total}"
-    )
+    await progress_msg.edit_text("✅ Finished")
+```
