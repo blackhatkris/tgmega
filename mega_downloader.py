@@ -20,7 +20,6 @@ async def start_mega_task(client, link, channel, progress_msg):
     )
 
     files = result.stdout.splitlines()
-
     files.sort()
 
     total = len(files)
@@ -62,7 +61,6 @@ async def start_mega_task(client, link, channel, progress_msg):
 
         except Exception as e:
 
-            raise Exception(f"Stopped: {str(e)}")
+            raise Exception(str(e))
 
-    await progress_msg.edit_text("✅ Finished")
-
+    await progress_msg.edit_text("✅ Upload finished")
