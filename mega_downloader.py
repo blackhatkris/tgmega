@@ -1,4 +1,4 @@
-```python
+
 import os
 import subprocess
 from uploader import upload_file
@@ -65,4 +65,4 @@ async def start_mega_task(client, link, channel, progress_msg):
             raise Exception(f"Stopped: {str(e)}")
 
     await progress_msg.edit_text("✅ Finished")
-```
+
